@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+pyyaml
+jinja2
+playwright
+python-docx
+anthropic
+python-dotenv
+pyjwt[crypto]
+httpx
+aiofiles
+psycopg2-binary
+pdfplumber
+cryptography
