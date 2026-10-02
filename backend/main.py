@@ -18,9 +18,12 @@ from generator import generate_pdf_bytes, generate_docx_bytes
 
 app = FastAPI(title="ResumeAI API", version="1.0.0")
 
+_frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+_dev_origins = [f"http://localhost:{p}" for p in range(3000, 3010)]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_URL", "http://localhost:3000")],
+    allow_origins=[_frontend_url] + _dev_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
