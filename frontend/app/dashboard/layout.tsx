@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
         <div className="p-4 border-t border-gray-100 flex items-center gap-3">
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
           <span className="text-xs text-gray-400 truncate">Account</span>
         </div>
       </aside>
