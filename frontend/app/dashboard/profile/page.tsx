@@ -135,7 +135,7 @@ export default function ProfilePage() {
     }
   }
 
-  function upd(path: string[], val: any) {
+  function upd(path: (string | number)[], val: any) {
     setProfile((prev: any) => {
       const next = { ...prev };
       let cur = next;
