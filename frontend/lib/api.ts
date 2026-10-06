@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://resumeai-production-51d1.up.railway.app";
 
 async function authFetch(token: string, path: string, options: RequestInit = {}) {
   const res = await fetch(`${API_URL}${path}`, {
