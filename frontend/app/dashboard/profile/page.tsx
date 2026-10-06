@@ -48,6 +48,7 @@ function SectionHeader({ title }: { title: string }) {
 export default function ProfilePage() {
   const { getToken } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -60,10 +61,14 @@ export default function ProfilePage() {
 
   useEffect(() => {
     (async () => {
-      const token = await getToken();
-      if (!token) return;
-      const data = await getProfile(token);
-      setProfile(data);
+      try {
+        const token = await getToken();
+        if (!token) { setLoadError("No auth token — try signing out and back in."); return; }
+        const data = await getProfile(token);
+        setProfile(data);
+      } catch (err: any) {
+        setLoadError(err.message || "Failed to load profile");
+      }
     })();
   }, [getToken]);
 
@@ -146,6 +151,10 @@ export default function ProfilePage() {
       cur[path[path.length - 1]] = val;
       return next;
     });
+  }
+
+  if (loadError) {
+    return <div className="p-8 text-red-500 text-sm font-mono">Error: {loadError}</div>;
   }
 
   if (!profile) {
