@@ -10,6 +10,7 @@ anthropic
 python-dotenv
 pyjwt[crypto]
 httpx
+httpx2
 aiofiles
 psycopg2-binary
 pdfplumber

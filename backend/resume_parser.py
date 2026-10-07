@@ -95,10 +95,10 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     if not raw_text.strip():
         raise ValueError("Could not extract text from the file. Make sure it's not a scanned image.")
 
-    import httpx
+    import httpx2
     from anthropic import Anthropic
     client = Anthropic(
-        http_client=httpx.Client(http2=False, timeout=60.0)
+        http_client=httpx2.Client(http2=False, timeout=60.0)
     )
 
     response = client.messages.create(
