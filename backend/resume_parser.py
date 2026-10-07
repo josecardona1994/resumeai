@@ -98,7 +98,7 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     import os
     import requests as req_lib
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     payload = {
         "model": "claude-sonnet-4-6",
         "max_tokens": 4096,
