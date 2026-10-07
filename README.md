@@ -4,6 +4,8 @@ AI-powered resume generator — upload your existing CV or fill in your profile,
 
 **Live demo:** https://resumeai-umber-zeta.vercel.app
 
+![ResumeAI Dashboard](screenshots/dashboard.png)
+
 ---
 
 ## Features
