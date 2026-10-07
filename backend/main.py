@@ -33,11 +33,8 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def _global_exc(request: Request, exc: Exception):
-    import traceback
-    print(f"UNHANDLED: {type(exc).__name__}: {exc}")
-    traceback.print_exc()
     origin = request.headers.get("origin", "")
-    resp = JSONResponse(status_code=500, content={"detail": f"{type(exc).__name__}: {exc}"})
+    resp = JSONResponse(status_code=500, content={"detail": "Internal server error"})
     if origin in _all_origins:
         resp.headers["Access-Control-Allow-Origin"] = origin
         resp.headers["Access-Control-Allow-Credentials"] = "true"
@@ -270,10 +267,8 @@ async def upload_resume(
         parsed = parse_resume(content, file.filename or "resume.pdf")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Parse error: {type(e).__name__}: {e}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to parse resume. Try a different file.")
 
     profile_row = db.query(Profile).filter(Profile.user_id == user.id).first()
     if profile_row:
