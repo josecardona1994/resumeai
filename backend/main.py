@@ -6,9 +6,9 @@ from pathlib import Path
 import httpx
 import yaml
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from sqlalchemy.orm import Session
 
 load_dotenv()
@@ -21,13 +21,27 @@ app = FastAPI(title="ResumeAI API", version="1.0.0")
 _frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 _dev_origins = [f"http://localhost:{p}" for p in range(3000, 3010)]
 
+_all_origins = [_frontend_url] + _dev_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[_frontend_url] + _dev_origins,
+    allow_origins=_all_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def _global_exc(request: Request, exc: Exception):
+    import traceback
+    print(f"UNHANDLED: {type(exc).__name__}: {exc}")
+    traceback.print_exc()
+    origin = request.headers.get("origin", "")
+    resp = JSONResponse(status_code=500, content={"detail": f"{type(exc).__name__}: {exc}"})
+    if origin in _all_origins:
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Access-Control-Allow-Credentials"] = "true"
+    return resp
 
 
 @app.on_event("startup")
@@ -257,6 +271,8 @@ async def upload_resume(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Parse error: {type(e).__name__}: {e}")
 
     profile_row = db.query(Profile).filter(Profile.user_id == user.id).first()
