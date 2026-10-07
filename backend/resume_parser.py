@@ -95,16 +95,14 @@ def parse_resume(file_bytes: bytes, filename: str) -> dict:
     if not raw_text.strip():
         raise ValueError("Could not extract text from the file. Make sure it's not a scanned image.")
 
-    import httpx2
-    from anthropic import Anthropic
-    client = Anthropic(
-        http_client=httpx2.Client(http2=False, timeout=60.0)
-    )
+    import os
+    import requests as req_lib
 
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
-        system=f"""You are a resume parser. Extract structured data from the resume text below.
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    payload = {
+        "model": "claude-sonnet-4-6",
+        "max_tokens": 4096,
+        "system": f"""You are a resume parser. Extract structured data from the resume text below.
 Return ONLY a valid JSON object matching the schema — no markdown, no explanation, no code fences.
 
 Rules:
@@ -118,13 +116,20 @@ Rules:
 
 Schema to follow:
 {PROFILE_SCHEMA}""",
-        messages=[{
-            "role": "user",
-            "content": f"Parse this resume into the JSON schema:\n\n{raw_text}"
-        }]
+        "messages": [{"role": "user", "content": f"Parse this resume into the JSON schema:\n\n{raw_text}"}],
+    }
+    resp = req_lib.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        json=payload,
+        timeout=90,
     )
-
-    raw_json = response.content[0].text.strip()
+    resp.raise_for_status()
+    raw_json = resp.json()["content"][0]["text"].strip()
 
     # Strip markdown fences if model adds them despite instructions
     if raw_json.startswith("```"):
