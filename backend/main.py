@@ -291,8 +291,8 @@ async def ai_update(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    import requests as req_lib
     import yaml as yaml_lib
-    from anthropic import Anthropic
 
     user_message = body.get("message", "")
     if not user_message:
@@ -302,11 +302,18 @@ async def ai_update(
     current = profile_row.data if profile_row else _empty_profile(user.name, user.email)
     profile_yaml = yaml_lib.dump(current, allow_unicode=True, sort_keys=False)
 
-    client = Anthropic()
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
-        system="""You are a professional resume writer assistant.
+    api_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    resp = req_lib.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        json={
+            "model": "claude-sonnet-4-6",
+            "max_tokens": 4096,
+            "system": """You are a professional resume writer assistant.
 Update the user's profile based on what they describe.
 Rules:
 - Use strong action verbs (Developed, Built, Designed, Led, Implemented...)
@@ -316,13 +323,12 @@ Rules:
 - For skills: add appropriate simple-icons slug and hex color (no #)
 - Return ONLY valid YAML — no markdown fences, no explanation
 - Preserve all existing data; only add or modify what was asked""",
-        messages=[{
-            "role": "user",
-            "content": f"Current profile:\n{profile_yaml}\n\nUpdate: {user_message}\n\nReturn the complete updated profile YAML."
-        }]
+            "messages": [{"role": "user", "content": f"Current profile:\n{profile_yaml}\n\nUpdate: {user_message}\n\nReturn the complete updated profile YAML."}],
+        },
+        timeout=90,
     )
-
-    updated_yaml = response.content[0].text.strip()
+    resp.raise_for_status()
+    updated_yaml = resp.json()["content"][0]["text"].strip()
     new_profile = yaml_lib.safe_load(updated_yaml)
 
     if profile_row:
