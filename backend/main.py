@@ -256,8 +256,8 @@ async def upload_resume(
         parsed = parse_resume(content, file.filename or "resume.pdf")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to parse resume. Try a different file.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Parse error: {type(e).__name__}: {e}")
 
     profile_row = db.query(Profile).filter(Profile.user_id == user.id).first()
     if profile_row:
